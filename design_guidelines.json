@@ -1,0 +1,104 @@
+{
+  "theme_and_archetype": {
+    "domain": "E-commerce Bakery",
+    "theme": "Light",
+    "archetype": "3 (Pastel & Soft)",
+    "description": "Girly, soft pastel theme with blush pink, lavender, cream, and gold accents. Elegant, premium, Instagram-inspired UI."
+  },
+  "colors": {
+    "background": "#FDFBF7",
+    "surface": "#FFFFFF",
+    "primary": "#F8C8DC",
+    "primary_hover": "#F2B8D0",
+    "secondary": "#E6E6FA",
+    "accent_gold": "#D4AF37",
+    "text_primary": "#4A3B32",
+    "text_secondary": "#7A675B",
+    "border": "#F2E8E3",
+    "gradient_hero": "linear-gradient(135deg, #FDFBF7 0%, #F8C8DC 50%, #E6E6FA 100%)",
+    "glass_bg": "rgba(255, 255, 255, 0.7)",
+    "glass_border": "rgba(255, 255, 255, 0.4)"
+  },
+  "typography": {
+    "font_family": {
+      "heading": "'Playfair Display', serif",
+      "body": "'DM Sans', sans-serif"
+    },
+    "scales": {
+      "h1": "text-5xl md:text-6xl+ tracking-tight",
+      "h2": "text-4xl md:text-5xl tracking-tight",
+      "h3": "text-2xl md:text-3xl",
+      "h4": "text-xl md:text-2xl",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm uppercase tracking-[0.2em]"
+    }
+  },
+  "layout_and_spacing": {
+    "container_padding": "px-6 md:px-12 lg:px-24",
+    "section_spacing": "py-20 md:py-32",
+    "border_radius": {
+      "card": "rounded-[32px]",
+      "button": "rounded-full",
+      "image": "rounded-3xl"
+    },
+    "shadows": {
+      "soft": "shadow-[0_8px_30px_rgb(0,0,0,0.04)]",
+      "hover": "shadow-[0_20px_40px_rgb(248,200,220,0.2)]",
+      "glass": "shadow-[0_8px_32px_rgba(248,200,220,0.15)]"
+    }
+  },
+  "motion": {
+    "floating_elements": "Framer motion { y: [0, -15, 0], rotate: [-5, 5, -5] } with repeat Infinity, duration 4-6s",
+    "hover_cards": "scale 1.02, translateY -4px, shadow-hover",
+    "page_transitions": "Fade in, slide up 20px on mount"
+  },
+  "components": {
+    "navbar": "Sticky, top-0, z-50, backdrop-blur-xl bg-white/70, border-b border-white/40",
+    "buttons": "Primary: bg-[#F8C8DC] text-[#4A3B32] hover:bg-[#F2B8D0] rounded-full px-8 py-4 font-medium transition-all shadow-soft. Secondary: border-2 border-[#F8C8DC] text-[#4A3B32] rounded-full px-8 py-4 hover:bg-[#FDFBF7]",
+    "cards": "bg-white rounded-[32px] p-6 shadow-soft hover:shadow-hover transition-all duration-300 border border-[#F2E8E3]",
+    "ai_chat": "Floating FAB bottom-right, hover to reveal small welcome message, click to open chat interface",
+    "gallery": "Masonry grid with group-hover image scale and overlay, Instagram icon appearing on hover"
+  },
+  "media": {
+    "icons_library": "lucide-react for standard UI, custom SVGs for decorative sparkles and hearts",
+    "hero": {
+      "background": "https://images.pexels.com/photos/29852581/pexels-photo-29852581.jpeg",
+      "floating_items": [
+        "https://images.pexels.com/photos/10281287/pexels-photo-10281287.jpeg",
+        "https://images.pexels.com/photos/20598678/pexels-photo-20598678.jpeg"
+      ]
+    },
+    "products": [
+      { "id": 1, "name": "Signature Blush Macarons", "url": "https://images.pexels.com/photos/34298814/pexels-photo-34298814.jpeg" },
+      { "id": 2, "name": "Valentine Cupcake Box", "url": "https://images.pexels.com/photos/31009878/pexels-photo-31009878.jpeg" },
+      { "id": 3, "name": "Vanilla Bean Cupcakes", "url": "https://images.pexels.com/photos/35227476/pexels-photo-35227476.jpeg" },
+      { "id": 4, "name": "Blueberry Lattice Pie", "url": "https://images.pexels.com/photos/5107179/pexels-photo-5107179.jpeg" },
+      { "id": 5, "name": "Walnut Honey Baklava", "url": "https://images.pexels.com/photos/8635161/pexels-photo-8635161.jpeg" },
+      { "id": 6, "name": "Classic Croissants", "url": "https://images.pexels.com/photos/35032379/pexels-photo-35032379.jpeg" },
+      { "id": 7, "name": "Custom Wedding Cake", "url": "https://images.pexels.com/photos/15346745/pexels-photo-15346745.jpeg" },
+      { "id": 8, "name": "Rainbow Macaron Tower", "url": "https://images.pexels.com/photos/20598678/pexels-photo-20598678.jpeg" }
+    ],
+    "gallery": [
+      "https://images.pexels.com/photos/5964621/pexels-photo-5964621.jpeg",
+      "https://images.unsplash.com/photo-1765692799769-a5d4924921fc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTJ8MHwxfHNlYXJjaHw0fHxiYWtlcnklMjBpbnRlcmlvciUyMHBpbmslMjBhZXN0aGV0aWN8ZW58MHx8fHwxNzc2Njg5Mjc0fDA&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1726749135886-f896fe38df69?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwyfHxpbnN0YWdyYW0lMjBhZXN0aGV0aWMlMjBiYWtlcnklMjBwYXN0cnklMjBjaGVmfGVufDB8fHx8MTc3NjY4OTI2OHww&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1625489409904-324a5e9591e1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwzfHxpbnN0YWdyYW0lMjBhZXN0aGV0aWMlMjBiYWtlcnklMjBwYXN0cnklMjBjaGVmfGVufDB8fHx8MTc3NjY4OTI2OHww&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1720397938084-228faac53600?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHwyfHxkZXNzZXJ0JTIwZmxhdGxheSUyMHBhc3RyeXxlbnwwfHx8fDE3NzY2ODkyNzR8MA&ixlib=rb-4.1.0&q=85"
+    ],
+    "about": {
+      "founder": "https://images.unsplash.com/photo-1726749135857-9fad0dc1d23c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwxfHxpbnN0YWdyYW0lMjBhZXN0aGV0aWMlMjBiYWtlcnklMjBwYXN0cnklMjBjaGVmfGVufDB8fHx8MTc3NjY4OTI2OHww&ixlib=rb-4.1.0&q=85",
+      "shop": "https://images.pexels.com/photos/29852581/pexels-photo-29852581.jpeg"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Use framer-motion heavily for smooth entrance animations on scroll and floating aesthetic elements.",
+    "Do not use generic 'Inter' for headings. Must use 'Playfair Display' or similar serif for luxury feel.",
+    "Implement the AI chat as a subtle floating button that opens a tailored Shadcn popover/dialog on click, with hover tooltip.",
+    "Navbar must be sticky with backdrop-blur and semi-transparent white background, hiding border unless scrolled.",
+    "Products need a clean Add to Cart interaction, preferably with a toast notification (Sonner).",
+    "Gallery should mimic an Instagram grid layout, using the media.gallery images provided, maintaining aspect ratios.",
+    "Ensure the hero section implements the soft pastel gradient and absolute positioned floating elements (macarons/cakes) for the dreamy vibe.",
+    "Custom Order form should have file upload (Shadcn input type file) and select components for themes.",
+    "Ensure all interactive elements have data-testid attributes."
+  ]
+}
