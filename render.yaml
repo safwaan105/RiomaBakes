@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: riomabakes-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: rioma_bakes
+      - key: CORS_ORIGINS
+        value: https://safwaan105.github.io
