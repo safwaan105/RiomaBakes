@@ -1,10 +1,12 @@
 # Rioma Bakes
 
-This repo is now set up for:
+This repo is now set up for a single-host deployment on Netlify.
 
-- local frontend development against `http://localhost:8000`
-- frontend deployment on Netlify
-- backend deployment on any FastAPI-friendly host
+The live site uses:
+
+- React frontend from `frontend/`
+- Netlify Functions for `/api/*`
+- Netlify Blobs for simple persistent storage of orders, custom requests, contact messages, and chat history
 
 ## Local Development
 
@@ -16,17 +18,7 @@ npm ci
 npm start
 ```
 
-The frontend defaults to `http://localhost:8000` when `REACT_APP_BACKEND_URL` is not set.
-
-Backend:
-
-```powershell
-cd backend
-pip install -r requirements.txt
-uvicorn server:app --reload --host 0.0.0.0 --port 8000
-```
-
-Create `backend/.env` from `backend/.env.example` before starting the API.
+For local Netlify-style development, use `netlify dev` if you have the Netlify CLI installed.
 
 ## Netlify Frontend
 
@@ -37,16 +29,6 @@ Netlify settings:
 - Base directory: `frontend`
 - Build command: `npm ci && npm run build`
 - Publish directory: `build`
+- Functions directory: `frontend/netlify/functions`
 
-Netlify environment variable:
-
-- `REACT_APP_BACKEND_URL=https://your-backend-host`
-
-## Backend Environment
-
-Set these on your backend host:
-
-- `MONGO_URL=...`
-- `DB_NAME=rioma_bakes`
-- `CORS_ORIGINS=http://localhost:3000,https://your-site-name.netlify.app`
-- `EMERGENT_LLM_KEY=...` for AI chat only
+No separate backend host is required.
