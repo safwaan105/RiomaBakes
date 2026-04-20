@@ -3,14 +3,6 @@
 # IDE and editors
 .idea/
 .vscode/
-.gitconfig
-.emergent/
-memory/
-test_reports/
-test_result.md
-frontend/frontend-start.out
-frontend/frontend-start.err
-frontend/.npm-cache/
 
 # Dependencies
 node_modules/
@@ -92,6 +84,8 @@ android-sdk/-e
 .env
 .env.*
 *.env
+!.env.example
+!**/.env.example
 credentials.json
 *.pem
 *.key

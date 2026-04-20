@@ -11,4 +11,4 @@ services:
       - key: DB_NAME
         value: rioma_bakes
       - key: CORS_ORIGINS
-        value: https://safwaan105.github.io
+        value: http://localhost:3000,https://your-site-name.netlify.app

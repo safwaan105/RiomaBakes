@@ -1,75 +1,52 @@
 # Rioma Bakes
 
-Rioma Bakes is a boutique bakery storefront with a React frontend and a FastAPI backend. The site includes product browsing, cart and checkout flows, custom order and contact forms, gallery pages, and a lightweight in-house chat concierge.
+This repo is now set up for:
 
-## Stack
-
-- Frontend: React, CRACO, Tailwind CSS, React Router
-- Backend: FastAPI, Motor, MongoDB
-- Deployment: GitHub Pages workflow for the frontend
+- local frontend development against `http://localhost:8000`
+- frontend deployment on Netlify
+- backend deployment on any FastAPI-friendly host
 
 ## Local Development
 
-### Frontend
+Frontend:
 
-```bash
+```powershell
 cd frontend
-npm install
+npm ci
 npm start
 ```
 
-### Backend
+The frontend defaults to `http://localhost:8000` when `REACT_APP_BACKEND_URL` is not set.
 
-```bash
+Backend:
+
+```powershell
 cd backend
 pip install -r requirements.txt
-uvicorn server:app --reload --port 8000
+uvicorn server:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Create a `backend/.env` file with:
+Create `backend/.env` from `backend/.env.example` before starting the API.
 
-```env
-MONGO_URL=your_mongodb_connection_string
-DB_NAME=rioma_bakes
-CORS_ORIGINS=http://localhost:3000
-```
+## Netlify Frontend
 
-## GitHub Pages
+This repo includes [netlify.toml](C:/Users/msafw/Downloads/RiomaBakes-main/RiomaBakes-main/netlify.toml) for SPA hosting.
 
-This repository includes a GitHub Actions workflow that deploys the frontend to GitHub Pages on pushes to `main`.
+Netlify settings:
 
-Expected Pages URL:
+- Base directory: `frontend`
+- Build command: `npm ci && npm run build`
+- Publish directory: `build`
 
-`https://safwaan105.github.io/RiomaBakes/`
+Netlify environment variable:
 
-Notes:
+- `REACT_APP_BACKEND_URL=https://your-backend-host`
 
-- The GitHub Pages deployment is frontend-only.
-- The backend and MongoDB are not hosted by GitHub Pages.
-- Interactive features that depend on the backend require a separate backend deployment and a configured `REACT_APP_BACKEND_URL`.
+## Backend Environment
 
-## PythonAnywhere Backend
+Set these on your backend host:
 
-If you want a low-cost fallback for the FastAPI backend, this repo includes a PythonAnywhere helper script:
-
-`backend/pythonanywhere_create_site.py`
-
-You will need:
-
-- a PythonAnywhere account
-- a PythonAnywhere API token
-- a virtualenv on PythonAnywhere with the backend requirements installed
-
-The backend app still uses the same MongoDB environment variables:
-
-```env
-MONGO_URL=your_mongodb_connection_string
-DB_NAME=rioma_bakes
-CORS_ORIGINS=https://safwaan105.github.io
-```
-
-After the backend is live, set the GitHub Actions repo variable:
-
-`REACT_APP_BACKEND_URL=https://your-backend-domain`
-
-Then rerun the GitHub Pages workflow so the frontend points to the backend.
+- `MONGO_URL=...`
+- `DB_NAME=rioma_bakes`
+- `CORS_ORIGINS=http://localhost:3000,https://your-site-name.netlify.app`
+- `EMERGENT_LLM_KEY=...` for AI chat only
