@@ -47,3 +47,29 @@ Notes:
 - The GitHub Pages deployment is frontend-only.
 - The backend and MongoDB are not hosted by GitHub Pages.
 - Interactive features that depend on the backend require a separate backend deployment and a configured `REACT_APP_BACKEND_URL`.
+
+## PythonAnywhere Backend
+
+If you want a low-cost fallback for the FastAPI backend, this repo includes a PythonAnywhere helper script:
+
+`backend/pythonanywhere_create_site.py`
+
+You will need:
+
+- a PythonAnywhere account
+- a PythonAnywhere API token
+- a virtualenv on PythonAnywhere with the backend requirements installed
+
+The backend app still uses the same MongoDB environment variables:
+
+```env
+MONGO_URL=your_mongodb_connection_string
+DB_NAME=rioma_bakes
+CORS_ORIGINS=https://safwaan105.github.io
+```
+
+After the backend is live, set the GitHub Actions repo variable:
+
+`REACT_APP_BACKEND_URL=https://your-backend-domain`
+
+Then rerun the GitHub Pages workflow so the frontend points to the backend.
