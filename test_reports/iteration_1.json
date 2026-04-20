@@ -1,0 +1,31 @@
+{
+  "summary": "Rioma Bakes testing — Backend fully passing (14/14 pytest incl. AI chat via EMERGENT_LLM_KEY). Frontend home/shop/gallery/product-detail render correctly. Shop shows all 8 seeded products and category filter reduces to 2 cakes as expected. Product detail page renders with qty controls and Add to cart button. Could not exhaustively verify full checkout/custom-order/contact/AI chat submissions via playwright because some data-testid selectors (e.g. add-to-cart, checkout-submit, custom-submit, contact-submit, ai-chat-toggle) could not be located — main agent should verify that these exact kebab-case testids are present on the rendered elements (the visible buttons exist but testids may differ).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Document head", "issue": "Browser tab title is 'Emergent | Fullstack App' instead of 'Rioma Bakes'", "selector": "<title>", "priority": "LOW"},
+      {"component": "ProductDetail/Checkout/CustomOrder/Contact/AIChatWidget", "issue": "data-testid attributes for key actionable elements (add-to-cart, checkout-submit, custom-submit, contact-submit, ai-chat-toggle, etc.) were NOT found by playwright on the live build. Visible buttons do exist (Add to cart confirmed visually). Verify exact testid naming matches review contract (kebab-case as specified).", "selector": "[data-testid='add-to-cart'] and peers", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Update <title> in /app/frontend/public/index.html to 'Rioma Bakes — Boutique Bakery'",
+    "Audit these data-testid attributes exist in DOM: add-to-cart, qty-plus, qty-minus, checkout-btn, checkout-name, checkout-email, checkout-phone, checkout-address, checkout-city, checkout-submit, order-success, custom-submit + custom-* field ids, custom-success, contact-submit + contact-* ids, contact-success, ai-chat-toggle, ai-chat-input, ai-chat-send, ai-msg-*, gallery-item-*, lightbox, lightbox-next, lightbox-close, nav-shop",
+    "After testid audit, retest full UI flows"
+  ],
+  "critical_code_review_comments": [
+    "server.py: Orders endpoint returns the pydantic model (good — no _id leak), but create_order pops _id from a dict that's not returned; harmless. Consider using response_model_exclude to avoid Mongo-side mutation.",
+    "seed_products uses deprecated @app.on_event('startup') — consider migrating to lifespan context.",
+    "EmailStr via pydantic ensures basic validation — OK.",
+    "Chat endpoint persists history but also uses LlmChat session_id — emergentintegrations handles history internally; duplication is fine but noted."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py", "/app/test_reports/iteration_1.json"],
+  "success_rate": {"backend": "100%", "frontend": "~60% verified (home, shop, filters, product detail, gallery render OK; form submissions not fully verifiable via testids)"},
+  "test_credentials": "N/A — public APIs, no auth",
+  "seed_data_creation": "No explicit seed; backend auto-seeds 8 products on startup. Tests created TEST_-prefixed orders/custom-orders/contact messages.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend regression tests at /app/backend/tests/backend_test.py (14 tests, all passing). For frontend, focus next run on verifying that the expected data-testid values are present: the visible UI (Add to cart on product page, checkout/custom-order/contact/chat widgets) exists and renders correctly, so any failure is likely a testid naming mismatch rather than a functional bug. Also update document <title>."
+}

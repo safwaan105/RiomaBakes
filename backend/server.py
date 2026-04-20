@@ -1,14 +1,16 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Form
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import base64
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 
 ROOT_DIR = Path(__file__).parent
@@ -19,54 +21,331 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
+EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
 
-# Create a router with the /api prefix
+app = FastAPI(title="Rioma Bakes API")
 api_router = APIRouter(prefix="/api")
 
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
+# ========== Models ==========
+def now_utc_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+class Product(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    name: str
+    category: str  # cakes | cookies | hampers | custom
+    description: str
+    price: float
+    image_url: str
+    tags: List[str] = []
+    featured: bool = False
+    created_at: str = Field(default_factory=now_utc_iso)
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
 
-# Add your routes to the router instead of directly to app
+class CartItem(BaseModel):
+    product_id: str
+    name: str
+    price: float
+    image_url: str
+    quantity: int
+
+
+class OrderCreate(BaseModel):
+    customer_name: str
+    email: EmailStr
+    phone: str
+    address: str
+    city: str
+    notes: Optional[str] = ""
+    items: List[CartItem]
+    total: float
+
+
+class Order(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    customer_name: str
+    email: str
+    phone: str
+    address: str
+    city: str
+    notes: Optional[str] = ""
+    items: List[CartItem]
+    total: float
+    status: str = "pending"
+    created_at: str = Field(default_factory=now_utc_iso)
+
+
+class CustomOrderCreate(BaseModel):
+    customer_name: str
+    email: EmailStr
+    phone: str
+    occasion: str
+    theme: str
+    flavour: str
+    servings: int
+    event_date: str
+    budget: Optional[str] = ""
+    description: str
+    reference_image: Optional[str] = ""  # base64 data URL
+
+
+class CustomOrder(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    customer_name: str
+    email: str
+    phone: str
+    occasion: str
+    theme: str
+    flavour: str
+    servings: int
+    event_date: str
+    budget: Optional[str] = ""
+    description: str
+    reference_image: Optional[str] = ""
+    status: str = "new"
+    created_at: str = Field(default_factory=now_utc_iso)
+
+
+class ContactCreate(BaseModel):
+    name: str
+    email: EmailStr
+    phone: Optional[str] = ""
+    subject: str
+    message: str
+
+
+class ContactMessage(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    email: str
+    phone: Optional[str] = ""
+    subject: str
+    message: str
+    created_at: str = Field(default_factory=now_utc_iso)
+
+
+class ChatRequest(BaseModel):
+    session_id: str
+    message: str
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    session_id: str
+
+
+# ========== Seed Products ==========
+SEED_PRODUCTS = [
+    {
+        "name": "Signature Blush Macarons",
+        "category": "cookies",
+        "description": "A dozen of our delicate rose and vanilla macarons with a velvety buttercream centre.",
+        "price": 28.0,
+        "image_url": "https://images.pexels.com/photos/34298814/pexels-photo-34298814.jpeg",
+        "tags": ["bestseller", "gift"],
+        "featured": True,
+    },
+    {
+        "name": "Valentine Cupcake Box",
+        "category": "cakes",
+        "description": "Six hand-piped cupcakes in rose, raspberry, and vanilla bean — nestled in a couture pink box.",
+        "price": 34.0,
+        "image_url": "https://images.pexels.com/photos/31009878/pexels-photo-31009878.jpeg",
+        "tags": ["limited", "love"],
+        "featured": True,
+    },
+    {
+        "name": "Vanilla Bean Cupcakes",
+        "category": "cakes",
+        "description": "Classic Madagascar vanilla cupcakes topped with swirls of silk Italian meringue buttercream.",
+        "price": 22.0,
+        "image_url": "https://images.pexels.com/photos/35227476/pexels-photo-35227476.jpeg",
+        "tags": ["classic"],
+        "featured": True,
+    },
+    {
+        "name": "Blueberry Lattice Pie",
+        "category": "hampers",
+        "description": "A rustic lattice-top pie bursting with wild blueberries and a hint of lemon zest.",
+        "price": 32.0,
+        "image_url": "https://images.pexels.com/photos/5107179/pexels-photo-5107179.jpeg",
+        "tags": ["seasonal"],
+        "featured": False,
+    },
+    {
+        "name": "Walnut Honey Baklava",
+        "category": "cookies",
+        "description": "Flaky golden layers soaked in orange-blossom honey with toasted walnuts.",
+        "price": 26.0,
+        "image_url": "https://images.pexels.com/photos/8635161/pexels-photo-8635161.jpeg",
+        "tags": ["nutty"],
+        "featured": False,
+    },
+    {
+        "name": "Classic Butter Croissants",
+        "category": "hampers",
+        "description": "Hand-laminated French butter croissants baked fresh every morning.",
+        "price": 18.0,
+        "image_url": "https://images.pexels.com/photos/35032379/pexels-photo-35032379.jpeg",
+        "tags": ["breakfast"],
+        "featured": False,
+    },
+    {
+        "name": "Couture Wedding Cake",
+        "category": "custom",
+        "description": "Three-tier hand-painted wedding cake with gold leaf and sugar florals. Starts from.",
+        "price": 280.0,
+        "image_url": "https://images.pexels.com/photos/15346745/pexels-photo-15346745.jpeg",
+        "tags": ["bespoke", "weddings"],
+        "featured": True,
+    },
+    {
+        "name": "Rainbow Macaron Tower",
+        "category": "custom",
+        "description": "A showstopping pastel macaron tower — perfect for birthdays and soirées.",
+        "price": 140.0,
+        "image_url": "https://images.pexels.com/photos/20598678/pexels-photo-20598678.jpeg",
+        "tags": ["events", "showpiece"],
+        "featured": True,
+    },
+]
+
+
+@app.on_event("startup")
+async def seed_products():
+    existing = await db.products.count_documents({})
+    if existing == 0:
+        docs = [Product(**p).model_dump() for p in SEED_PRODUCTS]
+        await db.products.insert_many(docs)
+        logging.info(f"Seeded {len(docs)} products")
+
+
+# ========== Routes ==========
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Rioma Bakes API", "status": "ok"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+@api_router.get("/products", response_model=List[Product])
+async def list_products(category: Optional[str] = None, featured: Optional[bool] = None):
+    query = {}
+    if category:
+        query["category"] = category
+    if featured is not None:
+        query["featured"] = featured
+    docs = await db.products.find(query, {"_id": 0}).to_list(500)
+    return docs
 
-# Include the router in the main app
+
+@api_router.get("/products/{product_id}", response_model=Product)
+async def get_product(product_id: str):
+    doc = await db.products.find_one({"id": product_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return doc
+
+
+@api_router.post("/orders", response_model=Order)
+async def create_order(payload: OrderCreate):
+    order = Order(**payload.model_dump())
+    doc = order.model_dump()
+    await db.orders.insert_one(doc)
+    # Remove any _id mongo may have added on the same dict reference
+    doc.pop("_id", None)
+    return order
+
+
+@api_router.get("/orders", response_model=List[Order])
+async def list_orders():
+    docs = await db.orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return docs
+
+
+@api_router.post("/custom-orders", response_model=CustomOrder)
+async def create_custom_order(payload: CustomOrderCreate):
+    custom = CustomOrder(**payload.model_dump())
+    await db.custom_orders.insert_one(custom.model_dump())
+    return custom
+
+
+@api_router.get("/custom-orders", response_model=List[CustomOrder])
+async def list_custom_orders():
+    docs = await db.custom_orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return docs
+
+
+@api_router.post("/contact", response_model=ContactMessage)
+async def create_contact(payload: ContactCreate):
+    msg = ContactMessage(**payload.model_dump())
+    await db.contact_messages.insert_one(msg.model_dump())
+    return msg
+
+
+# ========== AI Chat ==========
+SYSTEM_PROMPT = (
+    "You are Rioma, the warm and charming AI concierge for Rioma Bakes — a luxury boutique bakery. "
+    "Rioma Bakes specialises in artisanal cakes, cookies, macarons, hampers, and bespoke custom orders for "
+    "weddings, birthdays and events. Answer customer questions about products, pricing, delivery, custom orders, "
+    "ingredients, and allergens in a friendly, elegant, and concise tone (2-4 sentences). Encourage customers to "
+    "place their order via the website cart or fill in the Custom Order form for bespoke requests. If asked about "
+    "things outside baking, politely steer the conversation back to desserts and Rioma Bakes."
+)
+
+
+@api_router.post("/chat", response_model=ChatResponse)
+async def chat(payload: ChatRequest):
+    if not EMERGENT_LLM_KEY:
+        raise HTTPException(status_code=500, detail="LLM key not configured")
+    try:
+        # Load prior history for context
+        history_doc = await db.chat_sessions.find_one(
+            {"session_id": payload.session_id}, {"_id": 0}
+        )
+        history = history_doc.get("messages", []) if history_doc else []
+
+        chat_client = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=payload.session_id,
+            system_message=SYSTEM_PROMPT,
+        ).with_model("openai", "gpt-4o-mini")
+
+        user_msg = UserMessage(text=payload.message)
+        reply = await chat_client.send_message(user_msg)
+
+        history.append({"role": "user", "text": payload.message, "at": now_utc_iso()})
+        history.append({"role": "assistant", "text": reply, "at": now_utc_iso()})
+
+        await db.chat_sessions.update_one(
+            {"session_id": payload.session_id},
+            {"$set": {"session_id": payload.session_id, "messages": history, "updated_at": now_utc_iso()}},
+            upsert=True,
+        )
+        return ChatResponse(reply=reply, session_id=payload.session_id)
+    except Exception as e:
+        logging.exception("chat failed")
+        raise HTTPException(status_code=500, detail=f"chat error: {e}")
+
+
+# ========== Stats ==========
+@api_router.get("/stats")
+async def get_stats():
+    orders_count = await db.orders.count_documents({})
+    custom_count = await db.custom_orders.count_documents({})
+    # Fun baseline numbers + live counts
+    return {
+        "orders_delivered": 2480 + orders_count,
+        "happy_customers": 1860 + orders_count,
+        "custom_creations": 340 + custom_count,
+        "years_baking": 7,
+    }
+
+
 app.include_router(api_router)
 
 app.add_middleware(
@@ -77,12 +356,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 )
 logger = logging.getLogger(__name__)
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
